@@ -1,0 +1,60 @@
+<%- include("../partials/header.ejs") %>
+
+<div class="container">
+    <% if (locals.bookInfo) { %>
+        <% bookInfo.forEach(book => { %>
+            <hr class="featurette-divider" />
+            <div class="row featurette ms-5 py-4">
+                <div class="col-md-8 order-md-2">
+                    <h2 class="featurette-heading fw-normal lh-1 mb-3">
+                        <%= book.title %>
+                    </h2>
+                    <h4 class="featurette-heading fw-normal by ">by <%= book.author %></h4>
+                    <p class="info-para"> ISBN: <%= book.isbn %></p>
+                    <p class="info-para">Published in : <%= book.year %> </p>
+                    <p class="info-para">Number of pages : <%= book.pages %></p>
+                    <p class="lead">
+                        <form action="/book/summary/<%= book.isbn %>" method="get">
+                            <input type="submit" class="bg-primary rounded border-0 p-2" value="Read About Book">
+                        </form>
+                    </p>
+                </div>
+                <div class="col-md-2 order-md-1 me-3">
+                    <img class="bd-placeholder-img bd-placeholder-img-lg featurette-image img-fluid mx-auto" id="bookCover"
+                    src="https://covers.openlibrary.org/b/id/<%= book.coverid %>.jpg"
+                        preserveaspectratio="xMidYMid slice" focusable="false">
+                </div>
+            </div>
+        <% }) %>
+    <% } %>
+</div>
+
+
+    <!-- <div class="container col-xxl-10 col-xl-8">
+        <div class="row flex-lg-row align-items-center g-3">
+            <div class="col-10 col-sm-8 col-lg-6">
+                <img src="https://covers.openlibrary.org/b/isbn/9780143448334.jpg" class="d-block mx-lg-auto img-fluid"
+                    alt="book img" id="bookCover" loading="lazy">
+            </div>
+            <div class="col-lg-6">
+                <h3 class="display-5 fw-bold text-body-emphasis lh-1 mb-3">
+                    Wish I Could Tell You
+                </h3>
+                <div class="d-grid d-md-flex-column justify-content-md-start">
+                    <p class="lead">Author : Durjoy Dutta</p>
+                    <p class="lead">ISBN : 9780143448334</p>
+                    <p class="lead">Published in : 2019</p>
+                    <p class="lead">Number of pages : 257</p>
+                </div>
+                <p>
+                    Expect a book that has romance at its very core but one that
+                    has a lot more to offer than just a regular cliché romance. The book narrates a
+                    powerful story in a simple language and is packed with intense emotions, strong
+                    characters, highly unexpected twists and an underwhelming but beautiful romance.
+                    Finally, expect a book that takes Durjoy Datta’s writing to a whole new level.
+                </p>
+            </div>
+        </div>
+    </div> -->
+
+<%- include("../partials/footer.ejs") %>
