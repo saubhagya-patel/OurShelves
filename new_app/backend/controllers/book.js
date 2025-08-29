@@ -18,27 +18,6 @@ export const getAllBooks = async (req, res) => {
 };
 
 /**
- * Controller to get detailed information for a single book by its ISBN.
- * This includes the book's data and all community reviews.
- * Anyone can view these details.
- */
-export const getBookDetails = async (req, res) => {
-    try {
-        const { isbn } = req.params;
-        const book = await book_util.dbGetBookByIsbn(isbn);
-
-        if (!book) {
-            return res.status(404).json({ error: "Book not found in our library." });
-        }
-
-        const reviews = await book_util.dbGetReviewsForBook(isbn);
-        res.status(200).json({ ...book, reviews });
-    } catch (error) {
-        res.status(500).json({ error: "Failed to retrieve book details." });
-    }
-};
-
-/**
  * Controller for adding a new book to the database.
  * This happens after a user searches for a book and decides to add it.
  * This is a protected action.
@@ -130,3 +109,47 @@ export const searchOpenLibrary = async (req, res) => {
         res.status(500).json({ error: "Failed to search for books." });
     }
 };
+
+/**
+ * Controller to get detailed information for a single book by its ISBN.
+ */
+export const getBookDetails = async (req, res) => {
+    try {
+        const { isbn } = req.params;
+        const bookDetails = await book_util.dbGetBookByIsbn(isbn);
+
+        if (!bookDetails) {
+            return res.status(404).json({ message: "Book not found in our library." });
+        }
+
+        const allReviews = await book_util.dbGetReviewsForBook(isbn);
+        const { average_rating, review_count } = await book_util.dbGetAverageRating(isbn);
+
+        let userReview = null;
+        // Check if a user is logged in (req.user is added by our 'protect' middleware)
+        if (req.user) {
+            const foundUserReview = await book_util.dbGetUserReviewForBook(req.user.id, isbn);
+            if (foundUserReview) {
+                userReview = foundUserReview;
+            }
+        }
+
+        // Filter the main reviews list to exclude the current user's review,
+        // as we're sending it separately.
+        const communityReviews = allReviews.filter(r => !userReview || r.id !== userReview.id);
+
+        // Send the final, nested object that the frontend expects
+        res.status(200).json({
+            details: bookDetails,
+            reviews: communityReviews,
+            average_rating: parseFloat(average_rating) || 0,
+            review_count,
+            userReview,
+        });
+
+    } catch (error) {
+        console.error("Error in getBookDetails controller:", error);
+        res.status(500).json({ message: "Server error while fetching book details." });
+    }
+};
+

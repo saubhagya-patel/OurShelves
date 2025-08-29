@@ -116,3 +116,34 @@ export async function dbGetReviewsForBook(bookIsbn) {
         throw error;
     }
 }
+
+/**
+ * Calculates the average rating and review count for a book.
+ * @param {number|string} bookIsbn - The ISBN of the book.
+ * @returns {Promise<object>} An object with average_rating and review_count.
+ */
+export async function dbGetAverageRating(bookIsbn) {
+    const db = getDB();
+    const query = `
+        SELECT 
+            COALESCE(AVG(rating), 0) as average_rating, 
+            COUNT(id) as review_count
+        FROM user_reviews 
+        WHERE book_isbn = $1;
+    `;
+    const result = await db.query(query, [bookIsbn]);
+    return result.rows[0];
+}
+
+/**
+ * Gets a specific user's review for a specific book.
+ * @param {number} userId - The ID of the user.
+ * @param {number|string} bookIsbn - The ISBN of the book.
+ * @returns {Promise<object|null>} The user's review or null if not found.
+ */
+export async function dbGetUserReviewForBook(userId, bookIsbn) {
+    const db = getDB();
+    const query = "SELECT * FROM user_reviews WHERE user_id = $1 AND book_isbn = $2";
+    const result = await db.query(query, [userId, bookIsbn]);
+    return result.rows[0] || null;
+}
