@@ -3,9 +3,7 @@
 A full-stack, multi-user web application designed for book lovers to track, review, and discover literature. This project features a secure, scalable Node.js REST API backend and a modern, responsive React single-page application (SPA) frontend.
 
 **Developer:** Saubhagya Patel
-
 **Contact:** [patelsaubhagya0144@gmail.com](mailto:patelsaubhagya0144@gmail.com)
-
 **Project Dates:** Jan 2024 - Aug 2025
 
 ---
