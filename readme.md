@@ -1,51 +1,76 @@
 # Book Notes App
 
-**Project Overview**
+A full-stack, multi-user web application designed for book lovers to track, review, and discover literature. This project features a secure, scalable Node.js REST API backend and a modern, responsive React single-page application (SPA) frontend.
 
-**Made By:**
-- Developer: Saubhagya Patel
-- Contact: [patelsaubhagya0144@gmail.com](mailto:patelsaubhagya0144@gmail.com)
-- Date Started: 13 Jan 2024
+**Developer:** Saubhagya Patel
 
-**Technologies Used:**
-- Node.js
-- Express.js
-- PostgreSQL (Database)
-- Axios (for API requests)
-- EJS (Embedded JavaScript for templating)
-- Bootstrap CSS (Frontend styling)
+**Contact:** [patelsaubhagya0144@gmail.com](mailto:patelsaubhagya0144@gmail.com)
 
-**API Used:**
-- [Open Library API](https://openlibrary.org/developers/api)
+**Project Dates:** Jan 2024 - Aug 2025
 
-**Overall Features:**
+---
 
-1. *Book Information Management:*
-   - Store and manage information about books, including the number of pages, published year, author, cover image, and user review with ratings.
+### **Tech Stack**
 
-2. *Dynamic Book Addition:*
-   - Add new books through an intuitive user interface.
-   - Book details, including cover images, are retrieved and displayed using the Open Library API.
+**Backend:**
+* **Runtime:** Node.js
+* **Framework:** Express.js
+* **Database:** PostgreSQL
+* **Authentication:** JSON Web Tokens (JWT) & Bcrypt.js
+* **API Client:** Axios
 
-3. *Search Integration:*
-   - Utilize the Open Library API for book search functionality.
-   - Dynamically fetch book details (cover, author, etc.) based on user input.
+**Frontend:**
+* **Library:** React.js (bootstrapped with Vite)
+* **Styling:** Tailwind CSS
+* **Routing:** React Router
+* **API Client:** Axios
 
-4. *Database Integration:*
-   - Employ PostgreSQL for efficient and structured data storage.
-   - Store and retrieve book information seamlessly.
+**External Services:**
+* [Open Library API](https://openlibrary.org/developers/api) for book data.
 
-5. *User-Friendly Interface:*
-   - Develop a responsive and visually appealing frontend using Bootstrap CSS.
-   - Ensure a smooth user experience with interactive elements.
+---
 
-6. *Rating and Review System:*
-   - Allow users to provide reviews for each book, complete with a rating system.
+### **Core Features**
 
-**Additional Considerations:**
-- **Scalability:** Design the application to handle a growing number of books and users efficiently.
-- **Error Handling:** Implement robust error handling to provide a seamless user experience.
-- **Responsive Design:** Ensure that the application is accessible and functional across various devices.
+* **Secure Authentication:** Users can register and log in via a JWT-based system, with tokens expiring after one day for enhanced security.
+* **Personalized Reviews:** Each user can write and update a single, personal review (rating and summary) for any book in the library.
+* **Community-Driven Library:** Logged-in users can search the Open Library API to discover new books and add them to the application's shared database for all users to review.
+* **Modern User Experience:** A fast, dark-themed, and fully responsive interface ensures a seamless experience across desktops, tablets, and mobile devices.
 
-**Summary:**
-The Book Notes App is a comprehensive book management system developed using Node.js, Express.js, and PostgreSQL. It allows users to organize and track information about books, including dynamic addition through the Open Library API. With a user-friendly interface, secure authentication, and a sophisticated rating system, the app caters to book enthusiasts looking for an efficient way to manage their reading experiences. The integration of modern technologies and a production-ready deployment make this app a reliable and scalable solution for avid readers.
+---
+
+### **Getting Started**
+
+**Prerequisites:**
+* Node.js and npm installed
+* A running PostgreSQL server
+
+**1. Backend Setup:**
+```bash
+# Navigate to the backend folder
+cd backend
+
+# Install dependencies
+npm install
+
+# Create and configure a .env file with your database credentials and a JWT_SECRET
+
+# Initialize the database schema
+psql -U your_username -d your_database -f db/db_init.sql
+
+# Start the API server
+npm run dev
+````
+
+**2. Frontend Setup:**
+
+```bash
+# Navigate to the frontend folder
+cd frontend
+
+# Install dependencies
+npm install
+
+# Start the React development server
+npm run dev
+```
