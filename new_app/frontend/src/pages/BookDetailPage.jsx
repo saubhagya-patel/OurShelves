@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
-import { getBookDetails, submitReview } from '../services/apiClient.js';
+import { getBookDetails, submitReview } from '../services/apiClient';
 import { useAuth } from '../context/AuthContext';
 import ReviewForm from '../components/ReviewForm';
 
@@ -16,62 +16,81 @@ const StarRating = ({ rating }) => {
 
 function BookDetailPage() {
   const { isbn } = useParams();
-  const { isAuthenticated, token } = useAuth();
+  const { isAuthenticated, token, isLoading: isAuthLoading } = useAuth();
   const [book, setBook] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState(null);
 
+  // --- NEW STATE: To control showing the review form ---
+  const [isEditing, setIsEditing] = useState(false);
+
   const fetchBookDetails = useCallback(async () => {
+    // --- THIS IS THE FIX ---
+    // Wait for the auth context to be ready before fetching
+    if (isAuthLoading) {
+      return;
+    }
+    
+    if (!token) {
+        setIsLoading(false);
+        setError("You must be logged in to view this page.");
+        return;
+    }
     try {
+      setIsLoading(true);
       const response = await getBookDetails(isbn, token);
-      // DEBUG: Log the raw data from the API to the browser console
-      console.log("Data received from API:", response.data);
       setBook(response.data);
     } catch (err) {
-      setError('Failed to fetch book details. Please check the console for more information.');
-      console.error("API Error:", err);
+      setError('Failed to fetch book details.');
+      console.error(err);
     } finally {
       setIsLoading(false);
     }
-  }, [isbn, token]);
+  }, [isbn, token, isAuthLoading]); 
 
   useEffect(() => {
-    setIsLoading(true);
     fetchBookDetails();
   }, [fetchBookDetails]);
   
   const handleReviewSubmit = async (reviewData) => {
     setIsSubmitting(true);
-    setError(null); // Clear previous errors
     try {
       await submitReview(isbn, reviewData, token);
       fetchBookDetails(); 
+      setIsEditing(false); // --- NEW: Hide form on successful submit ---
     } catch (err) {
       console.error("Failed to submit review", err);
-      setError("There was an error submitting your review.");
+      setError("Failed to submit review.");
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  // Defensive check for book details before trying to access properties
+  // --- NEW: Handler for the Cancel button ---
+  const handleCancelEdit = () => {
+    setIsEditing(false);
+  };
+
   const coverImageUrl = book?.details?.coverid
     ? `https://covers.openlibrary.org/b/id/${book.details.coverid}-L.jpg`
     : 'https://placehold.co/300x450/1a202c/edf2f7?text=No+Cover';
 
-  if (isLoading) {
-    return <div className="text-center mt-20">Loading book details...</div>;
+  if (isLoading || isAuthLoading) {
+    return <div className="text-center mt-20">Loading...</div>;
   }
 
-  // Show a more prominent error message if the fetch failed
-  if (error && !book) {
+  if (error) {
     return <div className="text-center mt-20 text-red-500">{error}</div>;
   }
 
-  if (!book || !book.details) {
+  if (!book) {
     return <div className="text-center mt-20">Book not found.</div>;
   }
+
+  const reviewInitialData = book.userReview 
+    ? { rating: book.userReview.rating, review: book.userReview.review, is_public: book.userReview.is_public }
+    : { rating: 0, review: '', is_public: false };
 
   return (
     <div className="p-4 md:p-8">
@@ -80,14 +99,13 @@ function BookDetailPage() {
         <div className="md:col-span-1">
           <img src={coverImageUrl} alt={`Cover of ${book.details.title}`} className="rounded-lg shadow-lg w-full" />
           <div className="mt-6 p-4 bg-slate-800 rounded-lg">
-            {/* Using optional chaining (?) for safer rendering */}
-            <h2 className="text-xl font-bold text-white mb-2">{book.details?.title || 'Title not available'}</h2>
-            <p className="text-gray-400">by {book.details?.author || 'Author Unknown'}</p>
-            <p className="text-gray-500 text-sm mt-1">Published in {book.details?.year || 'N/A'}</p>
+            <h2 className="text-xl font-bold text-white mb-2">{book.details.title}</h2>
+            <p className="text-gray-400">by {book.details.author}</p>
+            <p className="text-gray-500 text-sm mt-1">Published in {book.details.year}</p>
             <div className="mt-4">
-              <StarRating rating={book.average_rating || 0} />
+              <StarRating rating={book.average_rating} />
               <p className="text-sm text-gray-500 mt-1">
-                {(book.average_rating || 0).toFixed(1)} average from {book.review_count || 0} reviews
+                {book.average_rating.toFixed(1)} average from {book.review_count} public reviews
               </p>
             </div>
           </div>
@@ -95,33 +113,71 @@ function BookDetailPage() {
 
         {/* Right Column: Reviews */}
         <div className="md:col-span-2 space-y-8">
+
+          {/* --- NEW: User Review Section Logic --- */}
           {isAuthenticated && (
-            <ReviewForm 
-              initialData={book.userReview || { rating: 0, summary: '' }}
-              onSubmit={handleReviewSubmit}
-              isSubmitting={isSubmitting}
-            />
+            <div className="bg-slate-800 p-6 rounded-lg shadow-lg">
+              {isEditing ? (
+                // --- STATE 1: User is actively editing ---
+                <ReviewForm 
+                  initialData={reviewInitialData}
+                  onSubmit={handleReviewSubmit}
+                  isSubmitting={isSubmitting}
+                  onCancel={handleCancelEdit} // Pass the cancel handler
+                />
+              ) : book.userReview ? (
+                // --- STATE 2: User has a review, but is not editing ---
+                <div>
+                  <div className="flex justify-between items-center mb-4">
+                    <h3 className="text-xl font-bold text-white">Your Review</h3>
+                    <button
+                      onClick={() => setIsEditing(true)}
+                      className="px-4 py-2 text-sm font-medium text-white bg-teal-500 rounded-md hover:bg-teal-600"
+                    >
+                      Edit Review
+                    </button>
+                  </div>
+                  <StarRating rating={book.userReview.rating} />
+                  <p className="text-gray-300 italic mt-4">"{book.userReview.review}"</p>
+                  <p className="text-xs text-gray-500 mt-2">
+                    {book.userReview.is_public ? "(Public)" : "(Private Note)"}
+                  </p>
+                </div>
+              ) : (
+                // --- STATE 3: User has no review and is not editing ---
+                <div className="text-center">
+                  <h3 className="text-xl font-bold text-white mb-4">You haven't reviewed this book.</h3>
+                  <button
+                    onClick={() => setIsEditing(true)}
+                    className="px-6 py-3 font-bold text-white bg-teal-500 rounded-md hover:bg-teal-600"
+                  >
+                    Write a Review
+                  </button>
+                </div>
+              )}
+            </div>
           )}
-           {error && <p className="text-center text-red-500 my-4">{error}</p>}
+          {/* --- END: User Review Section Logic --- */}
           
+          {/* Community Reviews Section */}
           <div>
-            <h2 className="text-2xl font-bold text-white mb-4">Community Reviews</h2>
+            <h2 className="text-2xl font-bold text-white mb-4">Community Reviews (Public)</h2>
             <div className="space-y-4">
-              {book.reviews && book.reviews.length > 0 ? (
+              {book.reviews.length > 0 ? (
                 book.reviews.map((review) => (
                   <div key={review.id} className="bg-slate-800 p-4 rounded-lg">
                     <div className="flex justify-between items-center mb-2">
-                      <p className="font-semibold text-teal-400">{review.email?.split('@')[0] || 'Anonymous'}</p>
+                      <p className="font-semibold text-teal-400">{review.email.split('@')[0]}</p>
                       <StarRating rating={review.rating} />
                     </div>
-                    <p className="text-gray-300">{review.summary}</p>
+                    <p className="text-gray-300 italic">"{review.review}"</p>
                     <p className="text-xs text-gray-500 mt-2">
                       {new Date(review.date_modified).toLocaleDateString()}
                     </p>
                   </div>
                 ))
               ) : (
-                <p className="text-gray-500">No reviews yet. Be the first to write one!</p>
+                <p className="text-gray-500">No public reviews for this book yet.</p>
               )}
             </div>
           </div>

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { HomePage, Navbar, SearchPage } from './components';
-import { BookDetailPage, LoginPage, RegisterPage } from './pages';
+import { BookDetailPage, LoginPage, RegisterPage, UserDashboardPage } from './pages';
 
 function App() {
   return (
@@ -15,6 +15,7 @@ function App() {
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/search" element={<SearchPage />} />
           <Route path="/books/:isbn" element={<BookDetailPage />} />
+          <Route path="/me/reviews" element={<UserDashboardPage />} />
         </Routes>
       </main>
     </div>

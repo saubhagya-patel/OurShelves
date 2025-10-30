@@ -4,7 +4,10 @@ const apiClient = axios.create({
   baseURL: 'http://localhost:3000/api',
 });
 
-// --- Authentication Endpoints ---
+// =================================================================
+// PUBLIC ROUTES (No Auth Needed)
+// =================================================================
+
 export const registerUser = (credentials) => {
   return apiClient.post('/auth/register', credentials);
 };
@@ -13,34 +16,68 @@ export const loginUser = (credentials) => {
   return apiClient.post('/auth/login', credentials);
 };
 
-// --- Book Endpoints ---
-export const getBooks = () => {
-  return apiClient.get('/book');
+export const getLatestReviews = () => {
+  return apiClient.get('/reviews/latest');
 };
 
+// =================================================================
+// PROTECTED ROUTES (Auth Token Required)
+// =================================================================
+
+/**
+ * Gets all books for the member homepage.
+ */
+export const getBooks = (token) => {
+  return apiClient.get('/books', {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+};
+
+/**
+ * Gets details for a single book.
+ */
 export const getBookDetails = (isbn, token) => {
-  // Pass token to check for user-specific review
-  const headers = token ? { Authorization: `Bearer ${token}` } : {};
-  return apiClient.get(`/book/${isbn}`, { headers });
+  return apiClient.get(`/books/${isbn}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
 };
 
+/**
+ * Searches the external Open Library API.
+ */
 export const searchExternalBooks = (query, token) => {
-  return apiClient.get(`/book/search/external?query=${query}`, {
+  return apiClient.get(`/books/search/external?query=${query}`, {
     headers: { Authorization: `Bearer ${token}` },
   });
 };
 
+/**
+ * Adds a new book to our library.
+ */
 export const addBook = (bookData, token) => {
-  return apiClient.post('/book', bookData, {
+  return apiClient.post('/books', bookData, {
     headers: { Authorization: `Bearer ${token}` },
   });
 };
 
-// NEW: Function to add or update a review (requires auth)
+/**
+ * Submits or updates a review. Now includes the review text and is_public flag.
+ */
 export const submitReview = (isbn, reviewData, token) => {
-    return apiClient.post(`/book/${isbn}/reviews`, reviewData, {
-        headers: { Authorization: `Bearer ${token}` },
-    });
+  // reviewData should be { rating, review, is_public }
+  return apiClient.post(`/books/${isbn}/reviews`, reviewData, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+};
+
+/**
+ * NEW: Gets the logged-in user's reviews for their dashboard.
+ */
+export const getMyReviews = (visibility, token) => {
+  // visibility should be 'public' or 'private'
+  return apiClient.get(`/me/reviews?visibility=${visibility}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
 };
 
 export default apiClient;
