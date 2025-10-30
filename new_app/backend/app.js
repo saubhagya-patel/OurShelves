@@ -36,7 +36,3 @@ const startServer = async () => {
 };
 
 startServer();
-
-// We are updating this project with some new features
-
-
