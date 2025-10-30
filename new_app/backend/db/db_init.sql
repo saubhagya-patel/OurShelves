@@ -26,7 +26,7 @@ CREATE TABLE "user_reviews" (
     "id" SERIAL PRIMARY KEY,
     "user_id" INTEGER NOT NULL REFERENCES "users"("id") ON DELETE CASCADE,
     "book_isbn" BIGINT NOT NULL REFERENCES "books"("isbn") ON DELETE CASCADE,
-    "rating" INTEGER NOT NULL CHECK (rating >= 1 AND rating <= 10),
+    "rating" INTEGER NOT NULL CHECK (rating >= 1 AND rating <= 5),
     "review" TEXT,
     "date_modified" DATE NOT NULL,
     "is_public" BOOLEAN NOT NULL DEFAULT false,

@@ -6,32 +6,23 @@ import { Link } from 'react-router-dom';
 
 function HomePage() {
   const { isAuthenticated, token, isLoading: isAuthLoading } = useAuth();
-
-  // We need to manage two separate sets of data
   const [books, setBooks] = useState([]);
   const [latestReviews, setLatestReviews] = useState([]);
-  
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    // Don't do anything until the auth state is confirmed
     if (isAuthLoading) {
       return;
     }
-
     const fetchData = async () => {
       setIsLoading(true);
       setError(null);
       try {
         if (isAuthenticated) {
-          // --- Member View ---
-          // Fetch all books for the library grid
           const response = await getBooks(token);
           setBooks(response.data);
         } else {
-          // --- Guest View ---
-          // Fetch the 10 latest public reviews
           const response = await getLatestReviews();
           setLatestReviews(response.data);
         }
@@ -42,14 +33,12 @@ function HomePage() {
         setIsLoading(false);
       }
     };
-
     fetchData();
-  }, [isAuthenticated, token, isAuthLoading]); // Re-run when auth state changes
+  }, [isAuthenticated, token, isAuthLoading]);
 
   if (isLoading || isAuthLoading) {
     return <div className="text-center mt-20">Loading...</div>;
   }
-
   if (error) {
     return <div className="text-center mt-20 text-red-500">{error}</div>;
   }
@@ -94,21 +83,20 @@ function HomePage() {
       <div className="space-y-4">
         {latestReviews.length > 0 ? (
           latestReviews.map((review) => {
-            // --- THIS IS THE FIX ---
-            // Normalize the 1-10 rating from the DB to a 1-5 star scale
-            const normalizedRating = Math.ceil((review.rating || 0) / 2);
-            const grayStars = 5 - normalizedRating;
+            
+            const rating = Math.round(review.rating || 0); 
+            const grayStars = 5 - rating;
             
             return (
               <div key={review.id} className="bg-slate-800 p-4 rounded-lg shadow">
                 <div className="flex justify-between items-center mb-2">
                   <span className="font-semibold text-teal-400">{review.email.split('@')[0]}</span>
                   <span className="text-yellow-400">
-                    {'★'.repeat(normalizedRating)}
+                    {'★'.repeat(rating)}
                     <span className="text-gray-600">{'★'.repeat(grayStars)}</span>
                   </span>
                 </div>
-                <p className="text-gray-400 text-sm mb-2">reviewed <strong className="text-gray-300">{review.book_title}</strong></p>
+                <p className="text-gray-400 text-sm mb-2">reviewed <strong className="text-gray-300">{review.title}</strong></p>
                 <p className="text-gray-200 italic">"{review.review}"</p>
               </div>
             );
