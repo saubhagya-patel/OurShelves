@@ -21,7 +21,7 @@ const startServer = async () => {
 
         // --- API Routes ---
         app.use("/api/auth", auth_router);
-        app.use("/api/book", book_router);
+        app.use("/api/books", book_router);
         app.use('/api/reviews', guest_router);
         app.use('/api/me', user_dashboard_router);
 
