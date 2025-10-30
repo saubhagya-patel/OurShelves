@@ -77,7 +77,7 @@ function MyReviewsPage() {
               <div key={review.id} className="bg-slate-800 p-4 rounded-lg shadow flex justify-between items-start">
                 <div>
                   <p className="text-sm text-gray-400">For the book:</p>
-                  <h3 className="text-xl font-semibold text-white mb-2">{review.title}</h3>
+                  <h3 className="text-xl font-semibold text-white mb-2">{review.book_title}</h3>
                   <div className="flex items-center mb-2">
                     <span className="text-yellow-400">{'★'.repeat(review.rating)}</span>
                     <span className="text-gray-600">{'★'.repeat(5 - review.rating)}</span>
