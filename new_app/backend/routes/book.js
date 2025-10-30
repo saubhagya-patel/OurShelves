@@ -4,14 +4,16 @@ import { book_controller } from '../controllers/index.js';
 
 const router = express.Router();
 
-// --- PUBLIC ROUTES ---
-router.get('/', book_controller.getAllBooks);
-router.get('/:isbn', book_controller.getBookDetails);
+// Keep all the routes protected here.
+router.use(auth_middleware.protect);
 
-// --- PROTECTED ROUTES ---
-// We use the 'protect' middleware as a gatekeeper for these routes.
-router.get('/search/external', auth_middleware.protect, book_controller.searchOpenLibrary);
-router.post('/', auth_middleware.protect, book_controller.addBook);
-router.post('/:isbn/reviews', auth_middleware.protect, book_controller.addReview);
+router.get('/', book_controller.getAllBooks);
+router.post('/', book_controller.addBook);
+
+router.get('/:isbn', book_controller.getBookDetails);
+router.post('/:isbn/reviews', book_controller.addOrUpdateReview);
+
+router.get('/search/external', book_controller.searchOpenLibrary);
+
 
 export default router;
