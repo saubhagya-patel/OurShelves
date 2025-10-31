@@ -1,10 +1,14 @@
 -- Drop existing tables in reverse order to avoid dependency conflicts
-DROP TABLE IF EXISTS "user_reviews" CASCADE;
-DROP TABLE IF EXISTS "books" CASCADE;
-DROP TABLE IF EXISTS "users" CASCADE;
 
 
-CREATE TABLE "users" (
+
+-- DROP TABLE IF EXISTS "user_reviews" CASCADE;
+-- DROP TABLE IF EXISTS "books" CASCADE;
+-- DROP TABLE IF EXISTS "users" CASCADE;
+
+-- these should be run iff, you wanna delete the db data, or at initialization
+
+CREATE TABLE IF NOT EXISTS "users" (
     "id" SERIAL PRIMARY KEY,
     "email" VARCHAR(255) UNIQUE NOT NULL,
     "password_hash" VARCHAR(255) NOT NULL,
@@ -12,7 +16,7 @@ CREATE TABLE "users" (
 );
 
 
-CREATE TABLE "books" (
+CREATE TABLE IF NOT EXISTS "books" (
     "isbn" BIGINT PRIMARY KEY,
     "title" VARCHAR(255) NOT NULL,
     "author" VARCHAR(255),
@@ -22,7 +26,7 @@ CREATE TABLE "books" (
 );
 
 
-CREATE TABLE "user_reviews" (
+CREATE TABLE IF NOT EXISTS "user_reviews" (
     "id" SERIAL PRIMARY KEY,
     "user_id" INTEGER NOT NULL REFERENCES "users"("id") ON DELETE CASCADE,
     "book_isbn" BIGINT NOT NULL REFERENCES "books"("isbn") ON DELETE CASCADE,

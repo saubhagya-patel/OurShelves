@@ -1,32 +1,56 @@
 import pg from "pg";
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
 
-let db;
+const { Client } = pg;
+
+let db; // cached client
 
 export const connectDB = async () => {
-    // Only create a new client if one doesn't already exist.
-    if (!db) {
-        db = new pg.Client({
-            user: process.env.PG_USER,
-            host: process.env.PG_HOST,
-            database: process.env.PG_DATABASE,
-            password: process.env.PG_PASSWORD,
-            port: process.env.PG_PORT,
-        });
+    if (db) { return db; } // reuse existing connection
 
-        try {
-            await db.connect();
-        } catch (error) {
-            console.error("Database connection failed during initialization.");
-            throw error;
-        }
+    const connectionString = process.env.DATABASE_URL;
+
+    db = new Client({
+        connectionString,
+        ssl: {
+            rejectUnauthorized: false,
+        },
+    });
+
+    try {
+        await db.connect();
+        console.log("✅ Connected to PostgreSQL database");
+
+        // Initialize database schema
+        await initializeDatabase(db);
+    } catch (error) {
+        console.error("❌ Database connection or initialization failed:", error.message);
+        throw error;
     }
+
     return db;
 };
 
+// ---- Private helper to initialize DB ----
+const initializeDatabase = async (client) => {
+    try {
+        const __filename = fileURLToPath(import.meta.url);
+        const __dirname = path.dirname(__filename);
+        const sqlPath = path.join(__dirname, "db_init.sql");
+
+        const sql = fs.readFileSync(sqlPath, "utf8");
+
+        await client.query(sql);
+        console.log("✅ Database initialized successfully");
+    } catch (err) {
+        console.error("❌ Failed to initialize database:", err.message);
+    }
+};
+
+// Export a helper to get the connected client
 export const getDB = () => {
-    if (!db) {
-        throw new Error("Database not connected. Call connectDB first.");
-    }
+    if (!db) throw new Error("Database not connected. Call connectDB() first.");
     return db;
 };
-
