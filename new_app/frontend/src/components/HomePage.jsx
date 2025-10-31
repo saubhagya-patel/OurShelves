@@ -69,8 +69,8 @@ function HomePage() {
   return (
     <div>
       <div className="text-center p-8 bg-slate-800 rounded-lg shadow-lg mb-10">
-        <h1 className="text-4xl font-bold text-white mb-4">Welcome to BookNotes</h1>
-        <p className="text-lg text-gray-300 mb-6">Discover and share reviews for the books you love.</p>
+        <h1 className="text-4xl font-bold text-white mb-4">Welcome to Our-Shelves</h1>
+        <p className="text-lg text-gray-300 mb-6">Discover and share reviews (or some insights) for the books you love.</p>
         <Link
           to="/register"
           className="bg-teal-500 text-white px-6 py-3 rounded-md font-bold text-lg hover:bg-teal-600 transition-colors"
@@ -81,7 +81,7 @@ function HomePage() {
 
       <h2 className="text-2xl font-bold text-white mb-6">Latest Community Reviews</h2>
       <div className="space-y-4">
-        {latestReviews.length > 0 ? (
+        {Array.isArray(latestReviews) && latestReviews.length > 0 ? (
           latestReviews.map((review) => {
             
             const rating = Math.round(review.rating || 0); 

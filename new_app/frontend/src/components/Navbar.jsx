@@ -24,7 +24,7 @@ function Navbar() {
         <div className="flex justify-between items-center py-4">
           {/* Brand/Logo can stay as a Link, or be a NavLink if you want it active on "/" */}
           <Link to="/" className="text-2xl font-bold text-white hover:text-teal-400 transition-colors">
-            BookNotes
+            Our-Shelves
           </Link>
 
           {/* Navigation Links */}
