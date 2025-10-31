@@ -15,5 +15,7 @@ router.post('/:isbn/reviews', book_controller.addOrUpdateReview);
 
 router.get('/search/external', book_controller.searchOpenLibrary);
 
+router.get('/:isbn/ai-summary', book_controller.getAiSummary);
+
 
 export default router;
