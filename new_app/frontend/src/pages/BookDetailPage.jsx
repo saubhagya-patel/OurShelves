@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
-import { getBookDetails, submitReview } from '../services/apiClient';
+import { getBookDetails, submitReview, getAiSummary } from '../services/apiClient'; 
 import { useAuth } from '../context/AuthContext';
 import ReviewForm from '../components/ReviewForm';
 
@@ -21,13 +21,14 @@ function BookDetailPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState(null);
+  const [aiSummary, setAiSummary] = useState(null);
+  const [isSummarizing, setIsSummarizing] = useState(false);
+  const [summaryError, setSummaryError] = useState(null);
 
-  // --- NEW STATE: To control showing the review form ---
+  // Review Form editing state
   const [isEditing, setIsEditing] = useState(false);
 
   const fetchBookDetails = useCallback(async () => {
-    // --- THIS IS THE FIX ---
-    // Wait for the auth context to be ready before fetching
     if (isAuthLoading) {
       return;
     }
@@ -41,6 +42,9 @@ function BookDetailPage() {
       setIsLoading(true);
       const response = await getBookDetails(isbn, token);
       setBook(response.data);
+      // Reset AI summary if the book data re-fetches
+      setAiSummary(null);
+      setSummaryError(null);
     } catch (err) {
       setError('Failed to fetch book details.');
       console.error(err);
@@ -58,7 +62,7 @@ function BookDetailPage() {
     try {
       await submitReview(isbn, reviewData, token);
       fetchBookDetails(); 
-      setIsEditing(false); // --- NEW: Hide form on successful submit ---
+      setIsEditing(false); // Hide form on successful submit
     } catch (err) {
       console.error("Failed to submit review", err);
       setError("Failed to submit review.");
@@ -67,7 +71,21 @@ function BookDetailPage() {
     }
   };
 
-  // --- NEW: Handler for the Cancel button ---
+  const handleGenerateSummary = async () => {
+    setIsSummarizing(true);
+    setSummaryError(null);
+    setAiSummary(null);
+    try {
+      const response = await getAiSummary(isbn, token);
+      setAiSummary(response.data.summary);
+    } catch (err) {
+      setSummaryError(err.response?.data?.message || "Failed to generate summary.");
+      console.error(err);
+    } finally {
+      setIsSummarizing(false);
+    }
+  };
+
   const handleCancelEdit = () => {
     setIsEditing(false);
   };
@@ -114,11 +132,11 @@ function BookDetailPage() {
         {/* Right Column: Reviews */}
         <div className="md:col-span-2 space-y-8">
 
-          {/* --- NEW: User Review Section Logic --- */}
+          {/* User Review Section Logic */}
           {isAuthenticated && (
             <div className="bg-slate-800 p-6 rounded-lg shadow-lg">
               {isEditing ? (
-                // --- STATE 1: User is actively editing ---
+                // STATE 1: User is actively editing
                 <ReviewForm 
                   initialData={reviewInitialData}
                   onSubmit={handleReviewSubmit}
@@ -126,7 +144,7 @@ function BookDetailPage() {
                   onCancel={handleCancelEdit} // Pass the cancel handler
                 />
               ) : book.userReview ? (
-                // --- STATE 2: User has a review, but is not editing ---
+                // STATE 2: User has a review, but is not editing
                 <div>
                   <div className="flex justify-between items-center mb-4">
                     <h3 className="text-xl font-bold text-white">Your Review</h3>
@@ -144,7 +162,7 @@ function BookDetailPage() {
                   </p>
                 </div>
               ) : (
-                // --- STATE 3: User has no review and is not editing ---
+                // STATE 3: User has no review and is not editing
                 <div className="text-center">
                   <h3 className="text-xl font-bold text-white mb-4">You haven't reviewed this book.</h3>
                   <button
@@ -157,9 +175,34 @@ function BookDetailPage() {
               )}
             </div>
           )}
-          {/* --- END: User Review Section Logic --- */}
           
-          {/* Community Reviews Section */}
+          {book.review_count > 10 && (
+            <div className="bg-slate-800 p-6 rounded-lg shadow-lg">
+              <h3 className="text-xl font-bold text-white mb-4">AI-Powered Summary</h3>
+              
+              {aiSummary && (
+                <p className="text-gray-300 italic mb-4">{aiSummary}</p>
+              )}
+              {isSummarizing && (
+                <p className="text-gray-400">Generating summary, please wait...</p>
+              )}
+              {summaryError && (
+                <p className="text-red-500">{summaryError}</p>
+              )}
+
+              {/* Show button if not loading and no summary yet */}
+              {!aiSummary && !isSummarizing && (
+                <button
+                  onClick={handleGenerateSummary}
+                  className="w-full px-4 py-2 font-bold text-white bg-indigo-600 rounded-md hover:bg-indigo-700 transition-colors disabled:bg-slate-600"
+                  disabled={!isAuthenticated} // Also disable if not logged in (though the whole page is protected)
+                >
+                  Generate Summary from {book.review_count} Reviews
+                </button>
+              )}
+            </div>
+          )}
+
           <div>
             <h2 className="text-2xl font-bold text-white mb-4">Community Reviews (Public)</h2>
             <div className="space-y-4">

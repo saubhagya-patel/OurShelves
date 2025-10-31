@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { book_util } from '../util/index.js';
+import { book_util, gemini_util } from '../util/index.js';
 
 const API_URL = "https://openlibrary.org/search.json?q=";
 
@@ -150,3 +150,26 @@ export const searchOpenLibrary = async (req, res) => {
     }
 };
 
+/**
+ * Controller to get ai summary for reviews.
+ * This is a protected action to prevent API abuse.
+ */
+export const getAiSummary = async (req, res) => {
+  try {
+    const { isbn } = req.params;
+    
+    const reviews = await book_util.dbGetPublicReviewsForBook(isbn);
+    
+    if (reviews.length < 10) {
+      return res.status(400).json({ message: "Not enough reviews to generate a summary." });
+    }
+
+    const reviewTexts = reviews.map(r => r.review);
+    const summary = await gemini_util.generateSummaryFromReviews(reviewTexts);
+    
+    res.status(200).json({ summary });
+    
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};

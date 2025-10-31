@@ -72,11 +72,20 @@ export const submitReview = (isbn, reviewData, token) => {
 };
 
 /**
- * NEW: Gets the logged-in user's reviews for their dashboard.
+ * Gets the logged-in user's reviews for their dashboard.
  */
 export const getMyReviews = (visibility, token) => {
   // visibility should be 'public' or 'private'
   return apiClient.get(`/me/reviews?visibility=${visibility}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+};
+
+/**
+ * Gets the summary of public reviews.
+ */
+export const getAiSummary = (isbn, token) => {
+  return apiClient.get(`/books/${isbn}/ai-summary`, {
     headers: { Authorization: `Bearer ${token}` },
   });
 };
